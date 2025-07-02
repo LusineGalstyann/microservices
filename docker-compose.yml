@@ -1,0 +1,59 @@
+version: "3.8"
+
+services:
+  user_service:
+    build:
+      context: .
+      dockerfile: user_service/Dockerfile
+    volumes:
+      - ./user_service:/app/user_service
+      - ./common:/app/common
+      - ./user_service/routers:/app/user_service/routers
+    working_dir: /app/user_service
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/fastapi
+    depends_on:
+      - db
+    networks:
+      - backend
+
+  post_service:
+    build:
+      context: .
+      dockerfile: post_service/Dockerfile
+    volumes:
+      - ./post_service:/app/post_service
+      - ./common:/app/common
+      - ./post_service/routers:/app/post_service/routers
+      - ./user_service/routers:/app/user_service/routers
+    working_dir: /app/post_service
+    ports:
+      - "8001:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/fastapi
+    depends_on:
+      - db
+    networks:
+      - backend
+
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: fastapi
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - backend
+
+volumes:
+  postgres_data:
+
+networks:
+  backend:

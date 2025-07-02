@@ -1,0 +1,36 @@
+# post-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: post-service
+spec:
+  selector:
+    matchLabels:
+      app: post-service
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: post-service
+    spec:
+      containers:
+        - name: post-service
+          image: post-service:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8000
+          env:
+            - name: DATABASE_URL
+              value: postgresql://postgres:postgres@db:5432/fastapi
+---
+# post-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: post-service
+spec:
+  selector:
+    app: post-service
+  ports:
+    - port: 8000
+      targetPort: 8000
